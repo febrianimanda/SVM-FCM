@@ -58,25 +58,24 @@ def getAllBuyingSession():
 		line = line.rstrip('\n')
 		data = line.split(',')
 		sesId = data[0]
-		i += 1
-		exist = any(d['sessionId'] == sesId for d in listSession)
-		if not exist:
-			sesDict = {
-				'sessionId':sesId,
-				'listBuy':[dict(zip(buying_keys, data))]
-			}
-			j += 1
-			print "adding",sesId,'\t| ',j,' added from ',i
-			listSession.append(sesDict)
-		else:
-			print "adding buy list from ",sesId
-			ix = getIndex(listSession, 'sessionId', sesId)  
-			sessionDict = listSession[ix]
-			buyDict = dict(zip(buying_keys, data))
-			sessionDict['listBuy'].append(buyDict)
-		if i > 10:
-			print listSession
-			quit()
+		if int(sesId) < 302080: #jumlah session
+			i += 1
+			exist = any(d['sessionId'] == sesId for d in listSession)
+			if not exist:
+				sesDict = {
+					'sessionId':sesId,
+					'listBuy':[dict(zip(buying_keys, data))]
+				}
+				j += 1
+				print "adding",sesId,'\t| ',j,' added from ',i
+				listSession.append(sesDict)
+			else:
+				print "adding buy list from ",sesId
+				ix = getIndex(listSession, 'sessionId', sesId)  
+				sessionDict = listSession[ix]
+				buyDict = dict(zip(buying_keys, data))
+				sessionDict['listBuy'].append(buyDict)
+	print "Jumlah session ",j," dari total ",i
 	f.close()
 	return listSession
 
@@ -99,13 +98,14 @@ def processingBrowsing(filename, buyingSession, mode='Train'):
 	f = open(iofile.datasetDir+filename,'r') 
 	listTime, listPage, listUser, listBuy = [],[],[],[]
 	sesId = '1' if mode=='Train' else '150019' #users session id start
-	buySessionList = [d['session'] for d in buyingSession]
+	buySessionList = [d['sessionId'] for d in buyingSession]
 	i = 0
 	j = 0
 	for line in f:
 		j += 1
 		arrLine = line.split(',')
 		newSesId = arrLine[0]
+		# shopList = []
 		if j > 1:
 			if sesId != newSesId:
 				i += 1
@@ -113,10 +113,14 @@ def processingBrowsing(filename, buyingSession, mode='Train'):
 				buyStatus = 'buy' if sesId in buySessionList else 'browse'
 				if buyStatus == 'buy':
 					listBuy.append(sesId)
-					d = getDict(buyingSession, 'sessionId', sesId)
+					# ix = getIndex(buyingSession, 'sessionId', sesId)
+					# for lst in d['listBuy']:
+					# 	listTime.append(dateutil.parser.parse(lst['timestamp']))
+					# 	shopList.append(lst['itemId'])
 				meanTime = getMeanVisit(listTime)
 				duration = getDuration(listTime[0],listTime[-1])
-				listUser.append(createUser(sesId, buyStatus, listPage, duration, meanTime))
+				# listUser.append(createUser(sesId, buyStatus, listPage, duration, meanTime, shopList))
+				listUser.append(createUser(sesId, buyStatus, listPage, duration, meanTime ))
 				sesId = newSesId
 				listTime, listPage = [],[]
 		listTime.append(dateutil.parser.parse(arrLine[1]))
@@ -126,8 +130,10 @@ def processingBrowsing(filename, buyingSession, mode='Train'):
 	f.close()
 	return listUser
 
-buyingSession = getAllBuyingSession()
-# browsingSessionTrain = iofile.readListFromFile('browsing-session-train.txt')
-# iofile.saveDictToCSV('browsing-session-train.csv', user_keys, browsingSessionTrain)
+buyingSession = iofile.readListFromPickle('buying-session-pickle.txt')
+browsingSession = processingBrowsing('yoochoose-click-train.txt', buyingSession)
+browsingSessionTest = processingBrowsing('yoochoose-click-test.txt', buyingSession, mode='Test')
+iofile.saveListToFile('browsing-session-train.txt', browsingSession)
+iofile.saveListToFile('browsing-session-test.txt', browsingSessionTest)
 
 # nProcessingUsers = 100000

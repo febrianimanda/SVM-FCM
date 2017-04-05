@@ -125,15 +125,13 @@ def processingBrowsing(filename, buyingSession, mode='Train'):
 				listTime, listPage = [],[]
 		listTime.append(dateutil.parser.parse(arrLine[1]))
 		listPage.append(arrLine[2])
-	iofile.saveListToPickle('buying-session-'+mode, listBuy)
+	iofile.savePickle('buying-session-'+mode, listBuy)
 	print "Successfully save",i,"users"
 	f.close()
 	return listUser
 
-buyingSession = iofile.readListFromPickle('buying-session-pickle.txt')
-browsingSession = processingBrowsing('yoochoose-click-train.txt', buyingSession)
-browsingSessionTest = processingBrowsing('yoochoose-click-test.txt', buyingSession, mode='Test')
-iofile.saveListToFile('browsing-session-train.txt', browsingSession)
-iofile.saveListToFile('browsing-session-test.txt', browsingSessionTest)
-
+browsingSession = iofile.readListFromFile('browsing-session-train.txt')
+browsingSessionTest = iofile.readListFromFile('browsing-session-test.txt')
+iofile.savePickle('browsing-session-train-pickle.txt', browsingSession)
+iofile.savePickle('browsing-session-test-pickle.txt', browsingSessionTest)
 # nProcessingUsers = 100000

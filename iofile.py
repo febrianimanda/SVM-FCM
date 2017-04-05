@@ -22,12 +22,12 @@ def readListFromFile(filename):
 	printOut(filename)
 	return myList
 
-def saveListToPickle(filename, myList):
+def savePickle(filename, myList):
 	with open(exportDir+filename,'wb') as f:
 		pickle.dump(myList, f)
 	printOut(filename, mode='Save to pickle')
 
-def readListFromPickle(filename):
+def readPickle(filename):
 	with open('exported/'+filename,'rb') as f:
 		data = pickle.load(f)
 		printOut(filename)

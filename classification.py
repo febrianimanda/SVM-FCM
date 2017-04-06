@@ -21,12 +21,18 @@ X = np.array(data)
 y = np.array(target)
 
 print X.shape
-svc = svm.SVC(kernel='linear', C=0.1).fit(X,y)
+# svc = svm.SVC(kernel='linear', C=0.1).fit(X,y)
 svc = iofile.readPickle('svc-pickle.pkl')
-print "save done"
-# Z = svc.predict(X)
-# print y
-# print Z
-# print "Number of mislabeled points : %d" % (y != Z).sum()
+# print "save done"
+Z = svc.predict(X)
+print "jumlah target 0 : %d" % (y == 0).sum()
+print "jumlah target 1 : %d" % (y == 1).sum()
+
+mislabeled = (y != Z).sum()
+correct = len(y) - mislabeled
+percent = float(correct) / len(y) * 100
+print "Number of correct points : %d" % correct
+print "Number of mislabeled points : %d" % mislabeled
+print "Correct Percentage : %f%s" % (percent,'%')
 # print svc
 # print Z

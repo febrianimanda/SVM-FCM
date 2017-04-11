@@ -8,7 +8,11 @@ exportDir = 'exported/'
 def printOut(name, mode='Load'):
 	print mode + "\t| " + name + " successfull"
 
+def printProgress(name, mode='Loading'):
+	print mode + " file " + name
+
 def saveListToFile(filename, myList):
+	printProgress(filename, 'saving')
 	thefile = open(exportDir+filename, 'w')
 	for item in myList:
 		print>>thefile, item
@@ -16,6 +20,7 @@ def saveListToFile(filename, myList):
 	thefile.close()
 
 def readListFromFile(filename):
+	printProgress(filename)
 	f = open(exportDir+filename,'r')
 	myList = [ast.literal_eval(line) for line in f]
 	f.close()
@@ -23,17 +28,20 @@ def readListFromFile(filename):
 	return myList
 
 def savePickle(filename, myList):
+	printProgress(filename, 'saving')
 	with open(exportDir+filename,'wb') as f:
 		pickle.dump(myList, f)
 	printOut(filename, mode='Save to pickle')
 
 def readPickle(filename):
+	printProgress(filename)
 	with open('exported/'+filename,'rb') as f:
 		data = pickle.load(f)
 		printOut(filename)
 		return data
 
 def saveDictToCSV(filename, fieldnames, data):
+	printProgress(filename, 'saving')
 	with open(exportDir+filename, 'wb') as csvfile:
 		writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 		writer.writeheader()
@@ -42,6 +50,7 @@ def saveDictToCSV(filename, fieldnames, data):
 	printOut(filename, mode='Save to csv')
 
 def readDictFromCSV(filename):
+	printProgress(filename)
 	f = open(exportDir+filename,'rb')
 	reader = csv.DictReader(csvfile)
 	f.close()

@@ -20,7 +20,7 @@ data, target = processingData()
 X = np.array(data)
 y = np.array(target)
 
-print X.shape
+# print X.shape
 # svc = svm.SVC(kernel='linear', C=0.1).fit(X,y)
 svc = iofile.readPickle('svc-pickle.pkl')
 # print "save done"

@@ -130,8 +130,16 @@ def processingBrowsing(filename, buyingSession, mode='Train'):
 	f.close()
 	return listUser
 
-browsingSession = iofile.readListFromFile('browsing-session-train.txt')
-browsingSessionTest = iofile.readListFromFile('browsing-session-test.txt')
-iofile.savePickle('browsing-session-train-pickle.txt', browsingSession)
-iofile.savePickle('browsing-session-test-pickle.txt', browsingSessionTest)
-# nProcessingUsers = 100000
+def getOnlyBuying(browsingSession):
+	data = []
+	for line in browsingSession:
+		if line['class'] == 'buy':
+			print "Add data", line, "\n"
+			data.append(line)
+	print "Sum of data added: ",len(data)
+	return data
+
+browsingSession = iofile.readPickle('browsing-session-combine.pkl')
+buyingData = getOnlyBuying(browsingSession)
+print len(buyingData)," : ",len(browsingSession)-len(buyingData)
+

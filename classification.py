@@ -2,6 +2,7 @@ import iofile, numpy as np, pickle
 from sklearn import svm
 # import matplotlib.pyplot as plt
 
+
 def processingData(rawData):
 	data = []
 	target = []
@@ -27,7 +28,7 @@ def confussionMatrix(model, testData, target):
 		else:
 			if target[ix] == Z[ix]: cm['tn'] += 1
 			else: cm['fn'] += 1
-	print cm
+	print "Confussion Matrix: ",cm
 	return cm
 
 def errorRate(confMatrix):
@@ -39,27 +40,29 @@ def accuracy(confMatrix):
 def sensitivity(confMatrix):
 	return float(confMatrix['tp']) / float(confMatrix['tp'] + confMatrix['fn'])
 
-def getBuyingSession(rawData, testData, model):
-	Z = model.predict(testData)
+def processBuyingSession(rawData, paramData, model):
+	Z = model.predict(paramData)
 	data =  []
 	for ix in range(len(Z)):
 		if Z[ix] == 1:
 			data.append(rawData[ix])
 			print "add to buying session: ",rawData[ix]
 	print len(data)
-	iofile.savePickle('buys-1.pkl')
+	iofile.savePickle('buys-1.pkl', data)
 	return data
 
-rawData = iofile.readPickle('clicks-combine.pkl')
+rawData = iofile.readPickle('clicks-combine-2.pkl')
 data, target = processingData(rawData)
 X = np.array(data)
 y = np.array(target)
 
 # svc = svm.SVC(kernel='linear', C=0.1, verbose=10).fit(X,y)
 # iofile.savePickle('svc-pickle.pkl')
-svc = iofile.readPickle('svc-pickle.pkl')
+svc = iofile.readPickle('svc-pickle-2.pkl')
 
 confMatrix = confussionMatrix(svc, data, target)
 print "Error Rate: ",errorRate(confMatrix)
 print "Accuracy: ",accuracy(confMatrix)
 print "Sensitivity: ",sensitivity(confMatrix)
+
+processBuyingSession(rawData, data, svc)

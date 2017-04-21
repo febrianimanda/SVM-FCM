@@ -1,4 +1,8 @@
 import iofile, numpy as np, pickle
+from pymongo import MongoClient
+
+client = MongoClient()
+db = client.yoochoose
 
 buyingSession = iofile.readPickle('buys-1.pkl')
 N = len(buyingSession)
@@ -33,6 +37,17 @@ def getSessionParam():
 	print "Done\n"
 	return data
 
+def saveSessionParams():
+	print "== Save Session Param =="
+	for obj in buyingSession:
+		arr = [0 for i in range(len(pages))]
+		for i in range(len(pages)):
+			if pages[i] in obj['browsed_page']:
+				arr[i] = obj['browsed_page'].count(pages[i])
+		obj = {'sessionId': obj['sessionId'], 'pages': arr}
+		db.params.insert_one(obj)
+	print "Done\n"
+
 def euclidean(a, b):
 	return np.linalg.norm(a-b)
 
@@ -66,9 +81,8 @@ def calcObjectiveFunction(X,c):
 
 def processingFCM():
 	print "=== Run Fuzzy C Means ==="
-	# X = np.array(getSessionParam())
-	# iofile.savePickle('params-1.pkl', X)
-	X = iofile.readPickle('params-1.pkl')
+	saveSessionParams()
+	X = np.array()
 	c = np.random.rand(C, len(pages))
 	stop, k, elm = False, 1, .03
 	m = np.random.rand(N, len(X))

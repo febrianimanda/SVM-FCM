@@ -66,9 +66,10 @@ def calcObjectiveFunction(X,c):
 
 def processingFCM():
 	print "=== Run Fuzzy C Means ==="
-	X = np.array(getSessionParam())
-	iofile.savePickle('params-1.pkl', X)
-	c = np.random.rand(C, len(X))
+	# X = np.array(getSessionParam())
+	# iofile.savePickle('params-1.pkl', X)
+	X = iofile.readPickle('params-1.pkl')
+	c = np.random.rand(C, len(pages))
 	stop, k, elm = False, 1, .03
 	m = np.random.rand(N, len(X))
 	while not stop:

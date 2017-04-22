@@ -4,8 +4,8 @@ from pymongo import MongoClient
 client = MongoClient()
 db = client.yoochoose
 
-# buyingSession = iofile.readPickle('buys-1.pkl')
-# N = len(buyingSession)
+buyingSession = iofile.readPickle('buys-1.pkl')
+N = len(buyingSession)
 C = 6
 q = 2
 
@@ -23,7 +23,7 @@ def collectAllPages(session):
 	print "Done\n"
 	return pages
 
-# pages = collectAllPages(buyingSession)
+pages = collectAllPages(buyingSession)
 
 def getSessionParam():
 	print "== Get Session Param =="
@@ -66,11 +66,13 @@ def calcCenter(X, c, j):
 	Cj = np.divide(atas, bawah)
 	return Cj
 
-def dbCalcCenter(X, c, j):
+def dbCalcCenter(c, j):
 	atas = 0
 	bawah = 1
 	for i in range(N):
-		atas += np.multiply(dbCalcMembership(c,i,j), X[i])
+		X = db.params.find_one({'index':i})
+		Xi = np.array(X['pages'])
+		atas += np.multiply(dbCalcMembership(c,i,j), Xi)
 	for i in range(N):
 		bawah += dbCalcMembership(c,i,j)
 	Cj = np.divide(atas, bawah)
@@ -117,13 +119,13 @@ def fuzzyClustering():
 		# caluclate the centers (Cj)
 		for j in range(C):
 			print "calculate center of cluster",j
-			c[j] = calcCenter(X,c,j)
+			c[j] = dbCalcCenter(c,j)
 
 		# update Fuzzy Membership
 		for i in range(N):
 			for j in range(C):
 				print "Updating membership session",i,"in cluster",j
-				m[i][j] = calcMembership(X, c, i, j)
+				m[i][j] = dbCalcMembership(c, i, j)
 
 		if k > 1:
 			Jm = euclidean(oldm, m)
@@ -164,6 +166,6 @@ def processingFCM():
 	print "Done\n"
 	return c, m
 
-# center, membership = processingFCM()
-# iofile.savePickle('fcm-membership-1.pkl', membership)
-# iofile.savePickle('fcm-center-1.pkl'. center)
+center, membership = fuzzyClustering()
+iofile.savePickle('fcm-membership-1.pkl', membership)
+iofile.savePickle('fcm-center-1.pkl'. center)

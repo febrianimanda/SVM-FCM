@@ -4,8 +4,8 @@ from pymongo import MongoClient
 client = MongoClient()
 db = client.yoochoose
 
-buyingSession = iofile.readPickle('buys-1.pkl')
-N = len(buyingSession)
+# buyingSession = iofile.readPickle('buys-1.pkl')
+# N = len(buyingSession)
 C = 6
 q = 2
 
@@ -23,7 +23,7 @@ def collectAllPages(session):
 	print "Done\n"
 	return pages
 
-pages = collectAllPages(buyingSession)
+# pages = collectAllPages(buyingSession)
 
 def getSessionParam():
 	print "== Get Session Param =="
@@ -90,7 +90,8 @@ def dbCalcMembership(c, i, j):
 	bawah = 0
 	for k in range(C):
 		pangkat = 2 / (q-1)
-		Xi = db.params.find({'index':i})
+		X = db.params.find_one({'index':i})
+		Xi = np.array(X['pages'])
 		div = (euclidean(Xi, c[j]) / euclidean(Xi, c[k]))
 		res = div ** pangkat
 		bawah += res
@@ -163,7 +164,6 @@ def processingFCM():
 	print "Done\n"
 	return c, m
 
-saveSessionParams()
 # center, membership = processingFCM()
 # iofile.savePickle('fcm-membership-1.pkl', membership)
 # iofile.savePickle('fcm-center-1.pkl'. center)

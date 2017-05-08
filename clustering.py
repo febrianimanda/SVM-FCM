@@ -4,10 +4,10 @@ from pymongo import MongoClient
 client = MongoClient()
 db = client.yoochoose
 
-# buyingSession = iofile.readPickle('buys-1.pkl')
-# N = len(buyingSession)
+buyingSession = iofile.readPickle('test-cluster-1.pkl')
+N = len(buyingSession)
 C = 6
-q = 2
+q = 2.5
 
 def getIndex(lst, key, val): # return value is index, use it for list of dictionary
 	return next(index for (index, d) in enumerate(lst) if d[key] == val)
@@ -23,7 +23,7 @@ def collectAllPages(session):
 	print "Done\n"
 	return pages
 
-# pages = collectAllPages(buyingSession)
+pages = collectAllPages(buyingSession)
 
 def getSessionParam():
 	print "== Get Session Param =="
@@ -138,7 +138,7 @@ def processingFCM():
 	# initialize Fuzzy Membership Value
 	X = np.array(getSessionParam())
 	c = np.random.rand(C, len(pages))
-	stop, k, elm = False, 1, .03
+	stop, k, elm = False, 1, .005
 	m = np.random.rand(N, C)
 	while not stop:
 		k += 1
@@ -164,6 +164,24 @@ def processingFCM():
 	print "Done\n"
 	return c, m
 
-# center, membership = processingFCM()
-# iofile.savePickle('fcm-membership-1.pkl', membership)
-# iofile.savePickle('fcm-center-1.pkl'. center)
+center, membership = processingFCM()
+# membership = iofile.readPickle('fcm-membership-1.pkl')
+# center = iofile.readPickle('fcm-center-1.pkl')
+
+listCenter = []
+
+for koord in center:
+	print koord
+	obj = {'kord': koord, 'member': []}
+	listCenter.append(obj)
+
+print ""
+j = 1
+for item in membership:
+	j += 1
+	ix = [i for i, x in enumerate(item) if x == max(item)][0]
+	listCenter[ix]['member'].append(j)
+	print "session %s to center %s" % (j, ix)
+
+for i, x in enumerate(listCenter):
+	print i, x['member'], "\n"

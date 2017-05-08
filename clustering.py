@@ -12,6 +12,35 @@ q = 2.5
 def getIndex(lst, key, val): # return value is index, use it for list of dictionary
 	return next(index for (index, d) in enumerate(lst) if d[key] == val)
 
+def getProducts(sessions):
+	listPages = []
+	for session in sessions:
+		for page in session['browsed_page']:
+			try:
+				ix = getIndex(listPages, 'page', page)
+				listPages[ix]['jumlah'] += 1
+			except Exception as e:
+				obj = {'page':page, 'jumlah': 1}
+				listPages.append(obj)
+	return listPages
+
+products =  getProducts(buyingSession)
+
+def filteringProducts(products, x):
+	j = 0
+	filtered, pages = [], []
+	for product in products:
+		if product['jumlah'] > x:
+			j+= 1
+			print product['jumlah'],
+			filtered.append(product)
+			pages.append(product['page'])
+	print "\n",j, len(products)
+	return pages, filtered
+
+filteredPages, filteredProducts = filteringProducts(products, 3)
+print filteredPages
+
 def collectAllPages(session):
 	print "== Collecting All Pages =="
 	pages = []

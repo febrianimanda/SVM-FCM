@@ -1,5 +1,5 @@
 from datetime import datetime
-import dateutil.parser, numpy
+import dateutil.parser, numpy, random
 import iofile
 
 user_keys = ['sessionId', 'class', 'details', 'duration', 'page_per_time', 'browsed_page', 'cart']
@@ -39,14 +39,18 @@ def getMeanVisit(listTime):
 		listDuration.append(getDuration(listTime[i],listTime[i+1]))
 	return sum(listDuration) / (len(listTime)-1)
 
-def processingBuy(filename):
-	f = open(datasetDir+filename,'r')
+def processingBuySession():
+	f = open(iofile.datasetDir+'yoochoose-buys.txt','r')
 	listBuySession = []
+	i, j = 0, 0
 	for line in f:
-		line = line.rstrip('\n')
-		info = line.split(',')
-		session = dict(zip(buying_keys, info))
-		listBuySession.append(session)
+		i += 1
+		sesId = line.split(',')[0]
+		if sesId not in listBuySession:
+			j += 1
+			listBuySession.append(sesId)
+			print j,"\t| Add session", sesId
+	print "Saving %d sessions from %d sessions in data" % (j,i)
 	return listBuySession
 
 def getAllBuyingSession():
@@ -58,23 +62,22 @@ def getAllBuyingSession():
 		line = line.rstrip('\n')
 		data = line.split(',')
 		sesId = data[0]
-		if int(sesId) < 302080: #jumlah session
-			i += 1
-			exist = any(d['sessionId'] == sesId for d in listSession)
-			if not exist:
-				sesDict = {
-					'sessionId':sesId,
-					'listBuy':[dict(zip(buying_keys, data))]
-				}
-				j += 1
-				print "adding",sesId,'\t| ',j,' added from ',i
-				listSession.append(sesDict)
-			else:
-				print "adding buy list from ",sesId
-				ix = getIndex(listSession, 'sessionId', sesId)  
-				sessionDict = listSession[ix]
-				buyDict = dict(zip(buying_keys, data))
-				sessionDict['listBuy'].append(buyDict)
+		i += 1
+		exist = any(d['sessionId'] == sesId for d in listSession)
+		if not exist:
+			sesDict = {
+				'sessionId':sesId,
+				'listBuy':[dict(zip(buying_keys, data))]
+			}
+			j += 1
+			print "adding",sesId,'\t| ',j,' added from ',i
+			listSession.append(sesDict)
+		else:
+			print "adding buy list from ",sesId
+			ix = getIndex(listSession, 'sessionId', sesId)  
+			sessionDict = listSession[ix]
+			buyDict = dict(zip(buying_keys, data))
+			sessionDict['listBuy'].append(buyDict)
 	print "Jumlah session ",j," dari total ",i
 	f.close()
 	return listSession
@@ -98,7 +101,7 @@ def processingBrowsing(filename, buyingSession, mode='Train'):
 	f = open(iofile.datasetDir+filename,'r') 
 	listTime, listPage, listUser, listBuy = [],[],[],[]
 	sesId = '1' if mode=='Train' else '150019' #users session id start
-	buySessionList = [d['sessionId'] for d in buyingSession]
+	# buySessionList = [d['sessionId'] for d in buyingSession]
 	i = 0
 	j = 0
 	for line in f:
@@ -110,7 +113,7 @@ def processingBrowsing(filename, buyingSession, mode='Train'):
 			if sesId != newSesId:
 				i += 1
 				print i,
-				buyStatus = 'buy' if sesId in buySessionList else 'browse'
+				buyStatus = 'buy' if sesId in buyingSession else 'browse'
 				if buyStatus == 'buy':
 					listBuy.append(sesId)
 					# ix = getIndex(buyingSession, 'sessionId', sesId)
@@ -134,12 +137,41 @@ def getOnlyBuying(browsingSession):
 	data = []
 	for line in browsingSession:
 		if line['class'] == 'buy':
-			print "Add data", line, "\n"
+			# print "Add data", line, "\n"
 			data.append(line)
-	print "Sum of data added: ",len(data)
+	print "Sum of data buying: ",len(data)
 	return data
 
-browsingSession = iofile.readPickle('browsing-session-combine.pkl')
-buyingData = getOnlyBuying(browsingSession)
-print len(buyingData)," : ",len(browsingSession)-len(buyingData)
+def randomPopList(lst):
+	random.shuffle(lst)
+	i = 0
+	for line in lst:
+		if line['class'] == 'buy':
+			if i > 10000:
+				break
+		else:
+			lst.remove(line)
+			i+= 1
+			print "deleted ", line
+	print "Sum of removed element", i
+	return lst
 
+
+
+browsingSession = iofile.readPickle('clicks-1.pkl')
+# print browsingSession
+ij = 0
+tempdata = []
+for line in browsingSession:
+	if ij > 1000:
+		break;
+	else:
+		ij += 1
+		tempdata.append(line)
+
+# remov = randomPopList(browsingSession)
+x = getOnlyBuying(tempdata)
+print len(x)
+# browsingSession.extend(x)
+print len(tempdata),len(tempdata)-len(x), len(x)
+iofile.savePickle('test-cluster-1.pkl',x)

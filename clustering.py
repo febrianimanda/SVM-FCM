@@ -32,14 +32,11 @@ def filteringProducts(products, x):
 	for product in products:
 		if product['jumlah'] > x:
 			j+= 1
-			print product['jumlah'],
 			filtered.append(product)
 			pages.append(product['page'])
-	print "\n",j, len(products)
+	# print "\n",j, len(products)
 	return pages, filtered
 
-filteredPages, filteredProducts = filteringProducts(products, 3)
-print filteredPages
 
 def collectAllPages(session):
 	print "== Collecting All Pages =="
@@ -195,24 +192,35 @@ def processingFCM():
 	print "Done\n"
 	return c, m
 
-center, membership = processingFCM()
-# membership = iofile.readPickle('fcm-membership-1.pkl')
-# center = iofile.readPickle('fcm-center-1.pkl')
+def getProduct(key, val):
+	return next(d for (index, d) in enumerate(products) if d[key] == val)
 
-listCenter = []
+center, membership = processingFCM()
+
+listSessionsByCenter, listPagesByCenter = [], [{'center':i, 'pages':[]} for i in range(len(center))]
 
 for koord in center:
-	print koord
 	obj = {'kord': koord, 'member': []}
-	listCenter.append(obj)
+	listSessionsByCenter.append(obj)
 
 print ""
-j = 1
-for item in membership:
-	j += 1
+filteredPages, filteredProducts = filteringProducts(products, 0)
+
+for j, item in enumerate(membership):
+	# append session to center
 	ix = [i for i, x in enumerate(item) if x == max(item)][0]
-	listCenter[ix]['member'].append(j)
+	listSessionsByCenter[ix]['member'].append(j)
+	# appent object of session to center and after filtered pages
+	sessionPages = list(set(filteredPages).intersection(buyingSession[j]['browsed_page']))
+	centerPages = list(set(sessionPages).difference(listPagesByCenter[ix]['pages']))
+	if len(centerPages) > 0:
+		listPagesByCenter[ix]['pages'].extend(centerPages)
+
 	print "session %s to center %s" % (j, ix)
 
-for i, x in enumerate(listCenter):
-	print i, x['member'], "\n"
+print listPagesByCenter
+print ""
+
+for i, x in enumerate(listSessionsByCenter):
+	print i, x['member']
+

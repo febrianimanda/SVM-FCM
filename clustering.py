@@ -1,4 +1,4 @@
-import iofile, numpy as np, pickle
+import iofile, numpy as np, pickle, operator
 from pymongo import MongoClient
 
 client = MongoClient()
@@ -6,7 +6,7 @@ db = client.yoochoose
 
 buyingSession = iofile.readPickle('test-cluster-1.pkl')
 N = len(buyingSession)
-C = 6
+C = 4
 q = 2.5
 
 def getIndex(lst, key, val): # return value is index, use it for list of dictionary
@@ -192,8 +192,8 @@ def processingFCM():
 	print "Done\n"
 	return c, m
 
-def getProduct(key, val):
-	return next(d for (index, d) in enumerate(products) if d[key] == val)
+def getPage(val):
+	return next(d for (index, d) in enumerate(products) if d['page'] == val)
 
 center, membership = processingFCM()
 
@@ -204,7 +204,7 @@ for koord in center:
 	listSessionsByCenter.append(obj)
 
 print ""
-filteredPages, filteredProducts = filteringProducts(products, 0)
+filteredPages, filteredProducts = filteringProducts(products, 1)
 
 for j, item in enumerate(membership):
 	# append session to center
@@ -218,9 +218,21 @@ for j, item in enumerate(membership):
 
 	print "session %s to center %s" % (j, ix)
 
-print listPagesByCenter
-print ""
+resultPages = []
+for center in listPagesByCenter:
+	print "center: %d" % (center['center'])
+	pagesObj = [getPage(page) for page in center['pages']]
+	totalAkses = sum([i['jumlah'] for i in pagesObj])
+	pagesScores = []
+	for page in center['pages']:
+		score = float(getPage(page)['jumlah']) / totalAkses * 100
+		obj = {'page': page, 'score':score}
+		pagesScores.append(obj)
+	filtered = [i['page'] for i in sorted(pagesScores, key=operator.itemgetter('score'), reverse=True)[:5]]
+	resultPages.append({'center':center, 'pages':filtered})
+
+print resultPages
 
 for i, x in enumerate(listSessionsByCenter):
-	print i, x['member']
+	print i, x['member'], resultPages[i]['pages']
 

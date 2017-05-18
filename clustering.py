@@ -126,6 +126,16 @@ def dbCalcMembership(c, i, j):
 	Mic = 1 / bawah
 	return Mic
 
+def calcMembership2(X, c, i, j):
+	bawah = 0
+	for k in range(N):
+		pangkat = 2 / (q-1)
+		div = (euclidean(X[i], c[j]) / euclidean(X[i], c[k]))
+		res = div ** pangkat
+		bawah += res
+	tij = 1 / bawah
+	return tij
+
 def calcObjectiveFunction(X,c):
 	jm = 0
 	for i in range(N):

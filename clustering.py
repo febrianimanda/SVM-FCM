@@ -6,7 +6,7 @@ db = client.yoochoose
 
 buyingSession = iofile.readPickle('test-cluster-1.pkl')
 N = len(buyingSession)
-C = 4
+C = 6
 q = 2.5
 
 def getIndex(lst, key, val): # return value is index, use it for list of dictionary
@@ -92,6 +92,39 @@ def calcCenter(X, c, j):
 	Cj = np.divide(atas, bawah)
 	return Cj
 
+def calcMembership(X, c, i, j):
+	bawah = 0
+	for k in range(C):
+		pangkat = 2 / (q-1)
+		div = (euclidean(X[i], c[j]) / euclidean(X[i], c[k]))
+		res = div ** pangkat
+		bawah += res
+	Mic = 1 / bawah
+	return Mic
+
+def calcPossibilisticCenter(X, c):
+	# X adalah membership dictionaries
+	# c adalah center index
+	atas, bawah = 0, 0
+	for k in range(N):
+		tambah = calcMembership(X,c,k,j), calcPossibilisticMembership(X,c,k,j)
+		atas += np.multiply(tambah, X[k])
+		bawah += tambah
+	vi = np.divide(atas,bawah)
+	# return vi
+
+def calcPossibilisticMembership(X, c, i, j):
+	bawah = 0
+	pangkat = float(2) / (N-1)	
+	for k in range(N):
+		a = euclidean(X[i], c[j])
+		b = euclidean(X[k], c[j])
+		div = a / b
+		res = div ** pangkat
+		bawah += res
+	tij = 1 / bawah
+	return tij
+
 def dbCalcCenter(c, j):
 	atas = 0
 	bawah = 1
@@ -103,16 +136,6 @@ def dbCalcCenter(c, j):
 		bawah += dbCalcMembership(c,i,j)
 	Cj = np.divide(atas, bawah)
 	return Cj
-
-def calcMembership(X, c, i, j):
-	bawah = 0
-	for k in range(C):
-		pangkat = 2 / (q-1)
-		div = (euclidean(X[i], c[j]) / euclidean(X[i], c[k]))
-		res = div ** pangkat
-		bawah += res
-	Mic = 1 / bawah
-	return Mic
 
 def dbCalcMembership(c, i, j):
 	bawah = 0
@@ -126,22 +149,19 @@ def dbCalcMembership(c, i, j):
 	Mic = 1 / bawah
 	return Mic
 
-def calcMembership2(X, c, i, j):
-	bawah = 0
-	for k in range(N):
-		pangkat = 2 / (q-1)
-		div = (euclidean(X[i], c[j]) / euclidean(X[i], c[k]))
-		res = div ** pangkat
-		bawah += res
-	tij = 1 / bawah
-	return tij
-
-def calcObjectiveFunction(X,c):
+def calcObjectiveFunction(X,m,c):
 	jm = 0
 	for i in range(N):
 		for j in range(C):
-			jm += calcMembership(X, c, i, j) * (euclidean(X[i],c[j]) ** 2)
-	return Jm
+			jm += m[i][j] * (euclidean(X[i],c[j]) ** 2)
+	return jm
+
+def calcPossibilisticObjectiveFunction(X,m,t,c):
+	jm = 0
+	for i in range(N):
+		for j in range(C):
+			jm += (m[i][j] + t[i][j]) * (euclidean(X[i],c[j]) ** 2)
+	return jm
 
 def fuzzyClustering():
 	c = np.random.rand(C, len(pages))
@@ -176,12 +196,12 @@ def processingFCM():
 	# initialize Fuzzy Membership Value
 	X = np.array(getSessionParam())
 	c = np.random.rand(C, len(pages))
-	stop, k, elm = False, 1, .005
+	stop, k, elm, Jm = False, 0, .005, 0
 	m = np.random.rand(N, C)
+	t = np.array(m, copy=True)
 	while not stop:
 		k += 1
-		# save old m
-		oldm = np.array(m, copy=True)
+		print "Number of Iteration:",k
 
 		# caluclate the centers (Cj)
 		for j in range(C):
@@ -191,14 +211,22 @@ def processingFCM():
 		# update Fuzzy Membership
 		for i in range(N):
 			for j in range(C):
-				print "Updating membership session",i,"in cluster",j
+				# print "Updating membership session",i,"in cluster",j
 				m[i][j] = calcMembership(X, c, i, j)
+				t[i][j] = calcPossibilisticMembership(X, c, i, j)
 
 		if k > 1:
-			Jm = euclidean(oldm, m)
-			print k," \t| ", Jm
-			if Jm < elm or k > 100: stop = True
+			oldJm = Jm
+			Jm = calcPossibilisticObjectiveFunction(X, m, t, c)
+			jmDiff = oldJm - Jm
+			print k," \t| ", Jm, jmDiff
+			if jmDiff == 0 or k >= 10: stop = True
 			else: print "Process again"
+		else:
+			Jm = calcPossibilisticObjectiveFunction(X,m,t,c)
+			print k," \t| ", Jm
+			print Jm
+
 	print "Done\n"
 	return c, m
 
@@ -213,7 +241,6 @@ for koord in center:
 	obj = {'kord': koord, 'member': []}
 	listSessionsByCenter.append(obj)
 
-print ""
 filteredPages, filteredProducts = filteringProducts(products, 1)
 
 for j, item in enumerate(membership):
@@ -230,7 +257,6 @@ for j, item in enumerate(membership):
 
 resultPages = []
 for center in listPagesByCenter:
-	print "center: %d" % (center['center'])
 	pagesObj = [getPage(page) for page in center['pages']]
 	totalAkses = sum([i['jumlah'] for i in pagesObj])
 	pagesScores = []

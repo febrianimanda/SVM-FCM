@@ -1,6 +1,6 @@
 from datetime import datetime
 import dateutil.parser
-import csv, pickle, ast
+import csv, pickle, ast, os.path
 
 datasetDir = 'dataset/'
 exportDir = 'exported/'
@@ -56,3 +56,6 @@ def readDictFromCSV(filename):
 	f.close()
 	printOut(filename)
 	return reader
+
+def isFileExist(filepath):
+	return os.path.exists(filepath)

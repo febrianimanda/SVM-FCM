@@ -40,6 +40,15 @@ def readPickle(filename):
 		printOut(filename)
 		return data
 
+def saveListToCsv(filename, fields, data):
+	printProgress(filename, 'saving')
+	with open(exportDir+filename, 'wb') as csvfile:
+		writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
+		writer.writerow(fields)
+		for item in data:
+			writer.writerow(item)
+	printOut(filename, mode='Save to csv')
+
 def saveDictToCSV(filename, fieldnames, data):
 	printProgress(filename, 'saving')
 	with open(exportDir+filename, 'wb') as csvfile:

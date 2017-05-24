@@ -83,17 +83,17 @@ def crossValidation(data, target, kernel='linear'):
 		X, y = np.array(trainData), np.array(trainTarget)
 
 		if kernel == 'sigmoid':
-			svc = svm.SVC(kernel=kernel, C=.01, gamma=.5, coef0=0, verbose=True, cache_size=7000).fit(X,y)
+			svc = svm.SVC(kernel=kernel, C=.01, gamma=.5, coef0=0, verbose=True, cache_size=1000).fit(X,y)
 		elif kernel == 'rbf':
-			svc = svm.SVC(kernel=kernel, C=10, gamma=.5, verbose=True, cache_size=7000).fit(X,y)
+			svc = svm.SVC(kernel=kernel, C=10, gamma=.5, verbose=True, cache_size=1000).fit(X,y)
 		elif kernel == 'poly':
-			svc = svm.SVC(kernel=kernel, C=.01, gamma=1, degree=3, coef0=10, verbose=True, cache_size=7000).fit(X,y)
+			svc = svm.SVC(kernel=kernel, C=.01, gamma=1, degree=3, coef0=10, verbose=True, cache_size=1000).fit(X,y)
 		else:
 			kernel = 'linear'
-			svc = svm.SVC(kernel=kernel, C=.1, verbose=True, cache_size=7000).fit(X,y)
+			svc = svm.SVC(kernel=kernel, C=.1, verbose=True, cache_size=1000).fit(X,y)
 
 		filename = 'svc-'+kernel
-		iofile.savePickle('pengujian/'+filename+'-fold'+`ix`+'.pkl')
+		iofile.savePickle('pengujian/'+filename+'-fold'+`ix`+'.pkl', svc)
 
 		savePengujian(ix, svc, trainData, trainTarget, testData, testTarget, filename)
 
@@ -123,7 +123,7 @@ def savePengujian(ix, svc, trData, trTarget, tData, tTarget, filename):
 	obj = dict(zip(pengujian_keys, pengujian_values))
 	dataUji.extend(obj)
 
-	iofile.saveDictToCsv('pengujian/'+filename+'.csv')
+	iofile.saveDictToCsv('pengujian/'+filename+'.csv', pengujian_keys, datauji)
 	fileheader = ['details', 'duration', 'page_per_time']
 	iofile.saveListToCsv('pengujian/training-'+filename+'-fold'+`ix`+'.csv', fileheader, trData)
 	iofile.saveListToCsv('pengujian/testing-'+filename+'-fold'+`ix`+'.csv', fileheader, tTarget)
@@ -133,6 +133,6 @@ print "Time process:", (time.time() - startTime)
 data, target = processingData(rawData)
 
 print "Time process:", (time.time() - startTime)
-crossValidation(data, target)
+crossValidation(data, target, 'sigmoid')
 
 # processBuyingSession(rawData, data, svc)

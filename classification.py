@@ -80,7 +80,6 @@ def crossValidation(data, target, kernel='linear'):
 				awal, akhir = i * foldLength, (i+1) * foldLength if i != k-1 else len(data)
 				trainData.extend(data[awal:akhir])
 				trainTarget.extend(target[awal:akhir])
-
 		X, y = np.array(trainData), np.array(trainTarget)
 
 		if kernel == 'sigmoid':
@@ -94,9 +93,9 @@ def crossValidation(data, target, kernel='linear'):
 			svc = svm.SVC(kernel=kernel, C=.1, verbose=True).fit(X,y)
 
 		filename = 'svc-'+kernel
-		iofile.savePickle('pengujian/'+filename+'-fold'+ix+'.pkl')
+		iofile.savePickle('pengujian/'+filename+'-fold'+`ix`+'.pkl')
 
-		savePengujian(ix, svc, )
+		savePengujian(ix, svc, trainData, trainTarget, testData, testTarget, filename)
 
 
 def savePengujian(ix, svc, trData, trTarget, tData, tTarget, filename):
@@ -126,8 +125,8 @@ def savePengujian(ix, svc, trData, trTarget, tData, tTarget, filename):
 
 	iofile.saveDictToCsv('pengujian/'+filename+'.csv')
 	fileheader = ['details', 'duration', 'page_per_time']
-	iofile.saveListToCsv('pengujian/training-'+filename+'-fold'+ix+'.csv', fileheader, trData)
-	iofile.saveListToCsv('pengujian/testing-'+filename+'-fold'+ix+'.csv', fileheader, tTarget)
+	iofile.saveListToCsv('pengujian/training-'+filename+'-fold'+`ix`+'.csv', fileheader, trData)
+	iofile.saveListToCsv('pengujian/testing-'+filename+'-fold'+`ix`+'.csv', fileheader, tTarget)
 
 rawData = iofile.readPickle('clicks-combine-2.pkl')
 print "Time process:", (time.time() - startTime)

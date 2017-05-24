@@ -83,14 +83,14 @@ def crossValidation(data, target, kernel='linear'):
 		X, y = np.array(trainData), np.array(trainTarget)
 
 		if kernel == 'sigmoid':
-			svc = svm.SVC(kernel=kernel, C=.01, gamma=.5, coef0=0, verbose=True).fit(X,y)
+			svc = svm.SVC(kernel=kernel, C=.01, gamma=.5, coef0=0, verbose=True, cache_size=7000).fit(X,y)
 		elif kernel == 'rbf':
-			svc = svm.SVC(kernel=kernel, C=10, gamma=.5, verbose=True).fit(X,y)
+			svc = svm.SVC(kernel=kernel, C=10, gamma=.5, verbose=True, cache_size=7000).fit(X,y)
 		elif kernel == 'poly':
-			svc = svm.SVC(kernel=kernel, C=.01, gamma=1, degree=3, coef0=10, verbose=True).fit(X,y)
+			svc = svm.SVC(kernel=kernel, C=.01, gamma=1, degree=3, coef0=10, verbose=True, cache_size=7000).fit(X,y)
 		else:
 			kernel = 'linear'
-			svc = svm.SVC(kernel=kernel, C=.1, verbose=True).fit(X,y)
+			svc = svm.SVC(kernel=kernel, C=.1, verbose=True, cache_size=7000).fit(X,y)
 
 		filename = 'svc-'+kernel
 		iofile.savePickle('pengujian/'+filename+'-fold'+`ix`+'.pkl')

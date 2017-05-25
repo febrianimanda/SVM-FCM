@@ -65,36 +65,37 @@ def processBuyingSession(rawData, paramData, model):
 def crossValidation(data, target, kernel='linear'):
 	print "=== Processing 10-fold Cross Validation ==="
 	k = 10
-	foldLength = float(len(data)) / k
+	foldLength = len(data) / k
+	print foldLength
+	# print data
 	# a,b adalah batas awal dan akhir untuk testing data
 	for ix in range(k):
 		print "Processed Time:", (time.time() - startTime)
 		print "Fold %d kernel %s" % (ix, kernel)
-		a, b = ix * foldLength, (ix+1) * foldLength
+		a, b = ix * foldLength, (ix+1) * foldLength if ix != k-1 else len(data)
 		testData, testTarget = data[a:b], target[a:b]
-		trainData, traiTarget = [], []
+		trainData, trainTarget = [], []
 		for i in range(k):
 			if i != ix:
-				awal, akhir = i * foldLength, (i+1) * foldLength
+				awal, akhir = i * foldLength, (i+1) * foldLength if i != k-1 else len(data)
 				trainData.extend(data[awal:akhir])
 				trainTarget.extend(target[awal:akhir])
-
 		X, y = np.array(trainData), np.array(trainTarget)
 
 		if kernel == 'sigmoid':
-			svc = svm.SVC(kernel=kernel, C=.01, gamma=.5, coef0=0).fit(X,y)
+			svc = svm.SVC(kernel=kernel, C=.01, gamma=.5, coef0=0, verbose=True, cache_size=1000).fit(X,y)
 		elif kernel == 'rbf':
-			svc = svm.SVC(kernel=kernel, C=10, gamma=.5).fit(X,y)
+			svc = svm.SVC(kernel=kernel, C=10, gamma=.5, verbose=True, cache_size=1000).fit(X,y)
 		elif kernel == 'poly':
-			svc = svm.SVC(kernel=kernel, C=.01, gamma=1, degree=3, coef0=10).fit(X,y)
+			svc = svm.SVC(kernel=kernel, C=.01, gamma=1, degree=3, coef0=10, verbose=True, cache_size=1000).fit(X,y)
 		else:
 			kernel = 'linear'
-			svc = svc.SVC(kernel=kernel, C=.1).fit(X,y)
+			svc = svm.SVC(kernel=kernel, C=.1, verbose=True, cache_size=1000).fit(X,y)
 
 		filename = 'svc-'+kernel
-		iofile.savePickle('pengujian/'+filename+'-fold'+ix+'.pkl')
+		iofile.savePickle('pengujian/'+filename+'-fold'+`ix`+'.pkl', svc)
 
-		savePengujian(ix, svc, )
+		savePengujian(ix, svc, trainData, trainTarget, testData, testTarget, filename)
 
 
 def savePengujian(ix, svc, trData, trTarget, tData, tTarget, filename):
@@ -122,16 +123,16 @@ def savePengujian(ix, svc, trData, trTarget, tData, tTarget, filename):
 	obj = dict(zip(pengujian_keys, pengujian_values))
 	dataUji.extend(obj)
 
-	iofile.saveDictToCsv('pengujian/'+filename+'.csv')
+	iofile.saveDictToCsv('pengujian/'+filename+'.csv', pengujian_keys, datauji)
 	fileheader = ['details', 'duration', 'page_per_time']
-	iofile.saveListToCsv('pengujian/training-'+filename+'-fold'+ix+'.csv', fileheader, trData)
-	iofile.saveListToCsv('pengujian/testing-'+filename+'-fold'+ix+'.csv', fileheader, tTarget)
+	iofile.saveListToCsv('pengujian/training-'+filename+'-fold'+`ix`+'.csv', fileheader, trData)
+	iofile.saveListToCsv('pengujian/testing-'+filename+'-fold'+`ix`+'.csv', fileheader, tTarget)
 
 rawData = iofile.readPickle('clicks-combine-2.pkl')
 print "Time process:", (time.time() - startTime)
 data, target = processingData(rawData)
 
-print "Time process:", (time.time() - oldTime)
-crossValidation(data, target)
+print "Time process:", (time.time() - startTime)
+crossValidation(data, target, 'sigmoid')
 
 # processBuyingSession(rawData, data, svc)

@@ -40,7 +40,7 @@ def readPickle(filename):
 		printOut(filename)
 		return data
 
-def saveListToCsv(filename, fields, data):
+def saveListToCSV(filename, fields, data):
 	printProgress(filename, 'saving')
 	with open(exportDir+filename, 'wb') as csvfile:
 		writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')

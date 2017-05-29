@@ -7,7 +7,7 @@ db = client.yoochoose
 buyingSession = iofile.readPickle('test-cluster-1.pkl')
 N = len(buyingSession)
 C = 6
-q = 2.5
+q = 2
 
 def getIndex(lst, key, val): # return value is index, use it for list of dictionary
 	return next(index for (index, d) in enumerate(lst) if d[key] == val)
@@ -102,16 +102,16 @@ def calcMembership(X, c, i, j):
 	Mic = 1 / bawah
 	return Mic
 
-def calcPossibilisticCenter(X, c):
+def calcPossibilisticCenter(X, c, j):
 	# X adalah membership dictionaries
 	# c adalah center index
 	atas, bawah = 0, 0
 	for k in range(N):
-		tambah = calcMembership(X,c,k,j), calcPossibilisticMembership(X,c,k,j)
+		tambah = np.add((calcMembership(X,c,k,j)**q), (calcPossibilisticMembership(X,c,k,j)**q))
 		atas += np.multiply(tambah, X[k])
 		bawah += tambah
 	vi = np.divide(atas,bawah)
-	# return vi
+	return vi
 
 def calcPossibilisticMembership(X, c, i, j):
 	bawah = 0
@@ -160,7 +160,7 @@ def calcPossibilisticObjectiveFunction(X,m,t,c):
 	jm = 0
 	for i in range(N):
 		for j in range(C):
-			jm += (m[i][j] + t[i][j]) * (euclidean(X[i],c[j]) ** 2)
+			jm += (m[i][j] ** q + t[i][j] ** q) * (euclidean(X[i],c[j]) ** 2)
 	return jm
 
 def fuzzyClustering():
@@ -204,9 +204,10 @@ def processingFCM():
 		print "Number of Iteration:",k
 
 		# caluclate the centers (Cj)
-		for j in range(C):
-			print "calculate center of cluster",j
-			c[j] = calcCenter(X,c,j)
+		print c
+		for i in range(C):
+			print "calculate center of cluster",i
+			c[i] = calcPossibilisticCenter(X,c,i)
 
 		# update Fuzzy Membership
 		for i in range(N):
@@ -218,9 +219,9 @@ def processingFCM():
 		if k > 1:
 			oldJm = Jm
 			Jm = calcPossibilisticObjectiveFunction(X, m, t, c)
-			jmDiff = oldJm - Jm
+			jmDiff = abs(Jm - oldJm)
 			print k," \t| ", Jm, jmDiff
-			if jmDiff == 0 or k >= 10: stop = True
+			if jmDiff < 0.0008 or k >= 10: stop = True
 			else: print "Process again"
 		else:
 			Jm = calcPossibilisticObjectiveFunction(X,m,t,c)

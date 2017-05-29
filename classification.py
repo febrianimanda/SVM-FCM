@@ -66,34 +66,36 @@ def crossValidation(data, target, kernel='linear'):
 	print "=== Processing 10-fold Cross Validation ==="
 	k = 10
 	foldLength = len(data) / k
-	print foldLength
+	filename = 'svc-'+kernel
 	# print data
 	# a,b adalah batas awal dan akhir untuk testing data
-	for ix in range(k):
+	for ix in range(3,4):
 		print "Processed Time:", (time.time() - startTime)
 		print "Fold %d kernel %s" % (ix, kernel)
 		a, b = ix * foldLength, (ix+1) * foldLength if ix != k-1 else len(data)
 		testData, testTarget = data[a:b], target[a:b]
 		trainData, trainTarget = [], []
-		for i in range(k):
+		for i in range(5,k):
 			if i != ix:
 				awal, akhir = i * foldLength, (i+1) * foldLength if i != k-1 else len(data)
 				trainData.extend(data[awal:akhir])
 				trainTarget.extend(target[awal:akhir])
 		X, y = np.array(trainData), np.array(trainTarget)
 
-		if kernel == 'sigmoid':
-			svc = svm.SVC(kernel=kernel, C=.01, gamma=.5, coef0=0, verbose=True, cache_size=1000).fit(X,y)
-		elif kernel == 'rbf':
-			svc = svm.SVC(kernel=kernel, C=10, gamma=.5, verbose=True, cache_size=1000).fit(X,y)
-		elif kernel == 'poly':
-			svc = svm.SVC(kernel=kernel, C=.01, gamma=1, degree=3, coef0=10, verbose=True, cache_size=1000).fit(X,y)
-		else:
-			kernel = 'linear'
-			svc = svm.SVC(kernel=kernel, C=.1, verbose=True, cache_size=1000).fit(X,y)
+		if ix != 0:
+			if kernel == 'sigmoid':
+				svc = svm.SVC(kernel=kernel, C=.01, gamma=.5, coef0=0, cache_size=1000).fit(X,y)
+			elif kernel == 'rbf':
+				svc = svm.SVC(kernel=kernel, C=10, gamma=.5, cache_size=1000).fit(X,y)
+			elif kernel == 'poly':
+				svc = svm.SVC(kernel=kernel, C=.01, gamma=1, degree=3, coef0=10, cache_size=1000).fit(X,y)
+			else:
+				kernel = 'linear'
+				svc = svm.SVC(kernel=kernel, C=.1, cache_size=1000).fit(X,y)
 
-		filename = 'svc-'+kernel
-		iofile.savePickle('pengujian/'+filename+'-fold'+`ix`+'.pkl', svc)
+			iofile.savePickle('pengujian/'+filename+'-fold'+`ix`+'.pkl', svc)
+		else:
+			svc = iofile.readPickle('pengujian/'+filename+'-fold'+`ix`+'.pkl')
 
 		savePengujian(ix, svc, trainData, trainTarget, testData, testTarget, filename)
 
@@ -103,15 +105,15 @@ def savePengujian(ix, svc, trData, trTarget, tData, tTarget, filename):
 	erRate = errorRate(confMatrix)
 	acc = accuracy(confMatrix)
 	sens = sensitivity(confMatrix) #sensitivity atau recall
-	precision = precision(confMatrix)
-	f1score = f1score(precision, sens)
+	prec = precision(confMatrix)
+	f1 = f1score(prec, sens)
 
 	print "Fold:", ix
 	print "Error Rate: ", erRate
 	print "Accuracy: ", acc
 	print "Sensitivity/Recall: ", sens
-	print "Precision: ", precision
-	print "F1 Score:", f1score
+	print "Precision: ", prec
+	print "F1 Score:", f1
 
 	if iofile.isFileExist('pengujian/'+filename+'.csv'):
 		dataUji = iofile.readDictFromCSV('pengujian/'+filename+'.csv')
@@ -119,20 +121,58 @@ def savePengujian(ix, svc, trData, trTarget, tData, tTarget, filename):
 		dataUji = []
 
 	pengujian_keys = ['fold', 'err', 'acc', 'sens', 'precision', 'f1']
-	pengujian_values = [ix, erRate, acc, sens, precision, f1score]
+	pengujian_values = [ix, erRate, acc, sens, prec, f1]
 	obj = dict(zip(pengujian_keys, pengujian_values))
-	dataUji.extend(obj)
+	dataUji.append(obj)
 
-	iofile.saveDictToCsv('pengujian/'+filename+'.csv', pengujian_keys, datauji)
+	iofile.saveDictToCSV('pengujian/'+filename+'.csv', pengujian_keys, dataUji)
 	fileheader = ['details', 'duration', 'page_per_time']
-	iofile.saveListToCsv('pengujian/training-'+filename+'-fold'+`ix`+'.csv', fileheader, trData)
-	iofile.saveListToCsv('pengujian/testing-'+filename+'-fold'+`ix`+'.csv', fileheader, tTarget)
+	iofile.saveListToCSV('pengujian/training-'+filename+'-fold'+`ix`+'.csv', fileheader, trData)
+	iofile.saveListToCSV('pengujian/testing-'+filename+'-fold'+`ix`+'.csv', fileheader, tData)
+
+def processingUjiFold(data, target, kernel):
+	k = 10
+	foldLength = len(data) / k
+	listUji = []
+	for ix in range(10):
+		print "Processed Time:", (time.time() - startTime)
+		print "Fold %d kernel %s" % (ix, kernel)
+
+		a, b = ix * foldLength, (ix+1) * foldLength if ix != k-1 else len(data)
+		testData, testTarget = data[a:b], target[a:b]
+		svc = iofile.readPickle('pengujian/svc-'+kernel+'-fold'+`ix`+'.pkl')
+		
+		confMatrix = confussionMatrix(svc, testData, testTarget)
+		erRate = errorRate(confMatrix)
+		acc = accuracy(confMatrix)
+		sens = sensitivity(confMatrix) #sensitivity atau recall
+		prec = precision(confMatrix)
+		f1 = f1score(prec, sens)
+
+		print "Fold:", ix
+		print "Error Rate: ", erRate
+		print "Accuracy: ", acc
+		print "Sensitivity/Recall: ", sens
+		print "Precision: ", prec
+		print "F1 Score:", f1
+
+		pengujian_keys = ['fold', 'err', 'acc', 'sens', 'precision', 'f1']
+		pengujian_values = [ix, erRate, acc, sens, prec, f1]
+		obj = dict(zip(pengujian_keys, pengujian_values))
+		listUji.append(obj)
+
+	iofile.saveDictToCSV('pengujian/svc-'+kernel+'.csv', pengujian_keys, listUji)
 
 rawData = iofile.readPickle('clicks-combine-2.pkl')
 print "Time process:", (time.time() - startTime)
 data, target = processingData(rawData)
 
-print "Time process:", (time.time() - startTime)
-crossValidation(data, target, 'sigmoid')
+a = iofile.readPickle('pengujian/svc-sigmoid-fold0.pkl')
+
+# processingUjiFold(data, target, 'poly')
+
+
+# print "Time process:", (time.time() - startTime)
+crossValidation(data, target, 'poly')
 
 # processBuyingSession(rawData, data, svc)
